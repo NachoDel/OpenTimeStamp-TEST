@@ -99,7 +99,7 @@ public class OtsService {
             ioe.printStackTrace();
         }
     }
-    // CHEQUEAR SI FUNCIONA CON PATHFILE!!!!!!!!!!!!1
+    // ------------- STAMP --------------
 
     // -------------- UPGRADE. Return TRUE si upgradeo y reemplazo el archivo --------------
     /**
@@ -140,8 +140,47 @@ public class OtsService {
 
         return changed;
     }
-    // ---- FUNCIONA ---- FUNCIONA ----- FUNCIONA ---- FUNCIONA ---- FUNCIONA ----
+    // -------------- UPGRADE. Return TRUE si upgradeo y reemplazo el archivo --------------
 
+    // -------------- INFO del Stamp (.ots) --------------
+    /**
+     * Muestra y devuelve la información legible del archivo .ots usando OpenTimestamps.info(...)
+     * @param otsPath Path al archivo .ots
+     * @return la cadena con la info legible (puede ser null o vacía según la librería)
+     * @throws Exception en errores de IO o de la librería
+     */
+    public static String info(Path otsPath) throws Exception {
+        if (!Files.exists(otsPath)) {
+            throw new IllegalArgumentException("El archivo .ots no existe: " + otsPath.toAbsolutePath());
+        }
+
+        // Reconstruir detached desde .ots
+        DetachedTimestampFile detached = readDetachedFromOts(otsPath);
+
+        // Obtener info legible
+        String info;
+        try {
+            info = OpenTimestamps.info(detached);
+        } catch (Exception e) {
+            System.err.println("Error al obtener OpenTimestamps.info(): " + e.getMessage());
+            throw e;
+        }
+
+        if (info == null || info.isEmpty()) {
+            System.out.println("OpenTimestamps.info(): (vacio/null). Puede que no haya información legible disponible aún.");
+        } else {
+            System.out.println("OpenTimestamps.info():");
+            System.out.println(info);
+        }
+        return info;
+    }
+
+    // Wrapper conveniente que acepta String
+    public static String info(String otsPathStr) throws Exception {
+        return info(Paths.get(otsPathStr));
+    }
+
+    // -------------- INFO del Stamp (.ots) --------------
 
     // -------- VERIFY. Retorna TRUE si verifico el archivo --------
     /**
@@ -200,7 +239,7 @@ public class OtsService {
 
         return success;
     }
-    // ---- FUNCIONA ---- FUNCIONA ----- FUNCIONA ---- FUNCIONA ---- FUNCIONA ----
+    // -------- VERIFY. Retorna TRUE si verifico el archivo --------
 
     // -------------- UPGRADE + VERIFY. Retorna TRUE en caso de poder upgradear y verificar el archivo--------------
     /**
@@ -229,7 +268,7 @@ public class OtsService {
         }
         return verified;
     }
-    // ---- FUNCIONA ---- FUNCIONA ----- FUNCIONA ---- FUNCIONA ---- FUNCIONA ----
+    // -------------- UPGRADE + VERIFY. Retorna TRUE en caso de poder upgradear y verificar el archivo--------------
 
 
     // -------------- UPGRADE + VERIFY CON REINTENTOS CADA 10 MIN HASTA 1 HORA MAXIMO (6 INTENTOS) --------------
@@ -300,7 +339,7 @@ public class OtsService {
         System.err.println("⚠️ Tras " + maxAttempts + " intentos no se logró verificar el timestamp.");
         return false;
     }
-    // ----
+    // -------------- UPGRADE + VERIFY CON REINTENTOS CADA 10 MIN HASTA 1 HORA MAXIMO (6 INTENTOS) --------------
 }
 
 
