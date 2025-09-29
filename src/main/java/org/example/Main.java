@@ -10,14 +10,14 @@ public class Main {
     public static void main(String[] args) {
         try {
             // ------------- File a timestampear -------------
-            //String filePathString = "//home/nacho/Documentos/PRUEBA OTS/Test2/test2.pdf";
-            //Path filePath = Paths.get(filePathString);
-            Path filePath = null;
+            String filePathString = "/home/nacho/Documentos/PRUEBA OTS/PDF para test-PPS/test_signed_token.pdf";
+            Path filePath = Paths.get(filePathString);
+            //Path filePath = null;
 
             //Path del archivo .ots a upgradear/verificar
-            //String otsFilePathString = "/home/nacho/Documentos/PRUEBA OTS/Test2/OTS con upgrade/test2.pdf.ots";
-            //Path otsFilePath = Paths.get(otsFilePathString);
-            Path otsFilePath = null;
+            String otsFilePathString = "/home/nacho/Documentos/PRUEBA OTS/Test2/OTS con upgrade/test2.pdf.ots";
+            Path otsFilePath = Paths.get(otsFilePathString);
+            //Path otsFilePath = null;
             // ------------- File a timestampear -------------
 
             // Solicitar al usuario el número de opción
@@ -33,29 +33,28 @@ public class Main {
             int opcion = scanner.nextInt();
 
             //Condiciones que requieren el path del archivo
-            if (opcion == 1 || opcion == 4 || opcion == 5 || opcion == 6) {
-                do {
-                    filePath = entradaFile();
-                    if (filePath == null || !filePath.toFile().exists()) {
-                        System.out.println("El archivo a stamp no existe. Por favor, ingrese una ruta válida.");
-                    }
-                } while(filePath ==null || !filePath.toFile().exists());
-            }
-            //Condiciones que requieren el path del archivo .ots
-            if (opcion == 2 || opcion == 3 || opcion == 4 || opcion == 5 || opcion == 6){
-                do {
-                    otsFilePath = entradaOts();
-                    if (otsFilePath == null || !otsFilePath.toFile().exists()) {
-                        System.out.println("El archivo .ots no existe. Por favor, ingrese una ruta válida.");
-                    }
-                } while(otsFilePath == null || !otsFilePath.toFile().exists());
-            }
-
+//            if (opcion == 1 || opcion == 4 || opcion == 5 || opcion == 6) {
+//                do {
+//                    filePath = entradaFile();
+//                    if (filePath == null || !filePath.toFile().exists()) {
+//                        System.out.println("El archivo a stamp no existe. Por favor, ingrese una ruta válida.");
+//                    }
+//                } while(filePath ==null || !filePath.toFile().exists());
+//            }
+//            //Condiciones que requieren el path del archivo .ots
+//            if (opcion == 2 || opcion == 3 || opcion == 4 || opcion == 5 || opcion == 6){
+//                do {
+//                    otsFilePath = entradaOts();
+//                    if (otsFilePath == null || !otsFilePath.toFile().exists()) {
+//                        System.out.println("El archivo .ots no existe. Por favor, ingrese una ruta válida.");
+//                    }
+//                } while(otsFilePath == null || !otsFilePath.toFile().exists());
+//            }
             // Switch case para elegir la operación
             switch (opcion) {
                 case 1:
                     System.out.println("Intentando realizar el timestamping...");
-                    OtsService.stampFile("/home/nacho/Documentos/PRUEBA OTS/Test2/test2.pdf");
+                    OtsService.stampFile(filePath);
                     System.out.println("Finalizado el proceso de timestamping");
                     break;
                 case 2:
