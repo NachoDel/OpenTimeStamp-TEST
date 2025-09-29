@@ -9,15 +9,15 @@ import java.util.Scanner;
 public class Main {
     public static void main(String[] args) {
         try {
-
-            //Variables para usar como path
             // ------------- File a timestampear -------------
-            String filePathString = "//home/nacho/Documentos/PRUEBA OTS/Test2/test2.pdf";
-            Path filePath = Paths.get(filePathString);
+            //String filePathString = "//home/nacho/Documentos/PRUEBA OTS/Test2/test2.pdf";
+            //Path filePath = Paths.get(filePathString);
+            Path filePath = null;
 
             //Path del archivo .ots a upgradear/verificar
-            String otsFilePathString = "/home/nacho/Documentos/PRUEBA OTS/Test2/OTS con upgrade/test2.pdf.ots";
-            Path otsFilePath = Paths.get(otsFilePathString);
+            //String otsFilePathString = "/home/nacho/Documentos/PRUEBA OTS/Test2/OTS con upgrade/test2.pdf.ots";
+            //Path otsFilePath = Paths.get(otsFilePathString);
+            Path otsFilePath = null;
             // ------------- File a timestampear -------------
 
             // Solicitar al usuario el número de opción
@@ -29,7 +29,27 @@ public class Main {
             System.out.println("4: Verificación del .ots");
             System.out.println("5: Upgrade + Verificación del .ots");
             System.out.println("6: Upgrade reiterado por 1 hora");
+            System.out.print("< ");
             int opcion = scanner.nextInt();
+
+            //Condiciones que requieren el path del archivo
+            if (opcion == 1 || opcion == 4 || opcion == 5 || opcion == 6) {
+                do {
+                    filePath = entradaFile();
+                    if (filePath == null || !filePath.toFile().exists()) {
+                        System.out.println("El archivo a stamp no existe. Por favor, ingrese una ruta válida.");
+                    }
+                } while(filePath ==null || !filePath.toFile().exists());
+            }
+            //Condiciones que requieren el path del archivo .ots
+            if (opcion == 2 || opcion == 3 || opcion == 4 || opcion == 5 || opcion == 6){
+                do {
+                    otsFilePath = entradaOts();
+                    if (otsFilePath == null || !otsFilePath.toFile().exists()) {
+                        System.out.println("El archivo .ots no existe. Por favor, ingrese una ruta válida.");
+                    }
+                } while(otsFilePath == null || !otsFilePath.toFile().exists());
+            }
 
             // Switch case para elegir la operación
             switch (opcion) {
@@ -82,5 +102,28 @@ public class Main {
             e.printStackTrace();
         }
     }
+
+    /*
+    * Metodo utilizado para solicitar la entrada del path del archivo a stampear/verificar
+    */
+    private static Path entradaFile(){
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Ingrese la ruta del archivo original: ");
+        String filePathStr = scanner.nextLine().trim();
+
+        return Paths.get(filePathStr).toAbsolutePath();
+    }
+
+    /*
+     * Metodo utilizado para solicitar la entrada del path del archivo ots a upgradear/verificar
+     */
+    private static Path entradaOts(){
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Ingrese la ruta del archivo .ots: ");
+        String filePathStr = scanner.nextLine().trim();
+
+        return Paths.get(filePathStr).toAbsolutePath();
+    }
+
 }
 
