@@ -1,7 +1,3 @@
-package org.example;
-
-import org.example.OtsService;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Scanner;
@@ -9,16 +5,23 @@ import java.util.Scanner;
 public class Main {
     public static void main(String[] args) {
         try {
-            // ------------- File a timestampear -------------
-            String filePathString = "/home/nacho/Documentos/PRUEBA OTS/PDF para test-PPS/test_signed_token.pdf";
-            Path filePath = Paths.get(filePathString);
-            //Path filePath = null;
+            // // HARDCODEO DIRECCIONES PARA TESTEO!!!!
+            // // ------------- File a timestampear -------------
+            // String filePathString = "/home/nacho/Documentos/PRUEBA OTS/PDF para test-PPS/test_signed_token.pdf";
+            // Path filePath = Paths.get(filePathString);
+            // //Path filePath = null;
 
-            //Path del archivo .ots a upgradear/verificar
-            String otsFilePathString = "/home/nacho/Documentos/PRUEBA OTS/Test2/OTS con upgrade/test2.pdf.ots";
-            Path otsFilePath = Paths.get(otsFilePathString);
-            //Path otsFilePath = null;
-            // ------------- File a timestampear -------------
+            // //Path del archivo .ots a upgradear/verificar
+            // String otsFilePathString = "/home/nacho/Documentos/PRUEBA OTS/Test2/OTS con upgrade/test2.pdf.ots";
+            // Path otsFilePath = Paths.get(otsFilePathString);
+            // //Path otsFilePath = null;
+            // // ------------- File a timestampear -------------
+            // // HARDCODEO DIRECCIONES PARA TESTEO!!!!
+
+
+            //Creacion variables para almacenar los paths
+            Path filePath = null;
+            Path otsFilePath = null;
 
             // Solicitar al usuario el número de opción
             Scanner scanner = new Scanner(System.in);
@@ -32,24 +35,27 @@ public class Main {
             System.out.print("< ");
             int opcion = scanner.nextInt();
 
+        // ---- Solicitud de PATHS segun la opcion elegida ----
             //Condiciones que requieren el path del archivo
-//            if (opcion == 1 || opcion == 4 || opcion == 5 || opcion == 6) {
-//                do {
-//                    filePath = entradaFile();
-//                    if (filePath == null || !filePath.toFile().exists()) {
-//                        System.out.println("El archivo a stamp no existe. Por favor, ingrese una ruta válida.");
-//                    }
-//                } while(filePath ==null || !filePath.toFile().exists());
-//            }
-//            //Condiciones que requieren el path del archivo .ots
-//            if (opcion == 2 || opcion == 3 || opcion == 4 || opcion == 5 || opcion == 6){
-//                do {
-//                    otsFilePath = entradaOts();
-//                    if (otsFilePath == null || !otsFilePath.toFile().exists()) {
-//                        System.out.println("El archivo .ots no existe. Por favor, ingrese una ruta válida.");
-//                    }
-//                } while(otsFilePath == null || !otsFilePath.toFile().exists());
-//            }
+           if (opcion == 1 || opcion == 4 || opcion == 5 || opcion == 6) {
+               do {
+                   filePath = entradaFile();
+                   if (filePath == null || !filePath.toFile().exists()) {
+                       System.out.println("El archivo a stamp no existe. Por favor, ingrese una ruta válida.");
+                   }
+               } while(filePath ==null || !filePath.toFile().exists());
+           }
+           //Condiciones que requieren el path del archivo .ots
+           if (opcion == 2 || opcion == 3 || opcion == 4 || opcion == 5 || opcion == 6){
+               do {
+                   otsFilePath = entradaOts();
+                   if (otsFilePath == null || !otsFilePath.toFile().exists()) {
+                       System.out.println("El archivo .ots no existe. Por favor, ingrese una ruta válida.");
+                   }
+               } while(otsFilePath == null || !otsFilePath.toFile().exists());
+           }
+        // ---- ---- ---- ----- ---- ---- ---- ---- ---- ---- ----
+
             // Switch case para elegir la operación
             switch (opcion) {
                 case 1:

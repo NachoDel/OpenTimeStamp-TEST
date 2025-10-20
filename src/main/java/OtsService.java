@@ -1,18 +1,17 @@
-package org.example;
 // -------------- Imports --------------
-import com.eternitywall.ots.*;
-import com.eternitywall.ots.op.OpSHA256;
 import java.io.File;
-import com.eternitywall.ots.DetachedTimestampFile;
-import com.eternitywall.ots.OpenTimestamps;
 import java.io.IOException;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.nio.file.*;
-import java.nio.channels.FileChannel;
+
+import com.eternitywall.ots.DetachedTimestampFile;
+import com.eternitywall.ots.OpenTimestamps;
+import com.eternitywall.ots.op.OpSHA256;
 // -------------- Imports --------------
 
 public class OtsService {
