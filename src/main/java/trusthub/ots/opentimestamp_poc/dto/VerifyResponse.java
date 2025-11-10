@@ -3,12 +3,26 @@ package trusthub.ots.opentimestamp_poc.dto;
 import java.util.Map;
 
 public class VerifyResponse {
-    private String status; // "OK" or "FAIL"
+    
+    /** Estado de verificación: "OK" si válido, "FAIL" si inválido */
+    private String status;
+    
+    /** Información legible del .ots (output de OpenTimestamps.info()) */
     private String info;
+    
+    /** Transaction ID de Bitcoin donde fue incluido el timestamp (puede ser null) */
     private String txid;
+    
+    /** Hash del bloque de Bitcoin (puede ser null) */
     private String block_hash;
+    
+    /** Altura del bloque (puede ser null) */
     private Long block_height;
-    private String block_time; // ISO instant string, e.g. 2025-09-21T12:34:56Z
+    
+    /** Timestamp del bloque en formato ISO 8601 UTC (ej: "2025-01-15T10:30:00Z") */
+    private String block_time;
+    
+    /** Resultados crudos de verificación de la librería OpenTimestamps */
     private Map<?, ?> rawVerifyResults;
 
     public VerifyResponse() {}

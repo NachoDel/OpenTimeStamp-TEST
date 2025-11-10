@@ -4,8 +4,8 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
-import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 @SpringBootApplication
 public class OpentimestampPocApplication {
@@ -14,14 +14,18 @@ public class OpentimestampPocApplication {
 		SpringApplication.run(OpentimestampPocApplication.class, args);
 	}
 
+	//Solo utilizado en desarrollo, se puede eliminar
 	@Bean
-	@ConditionalOnBean(RequestMappingHandlerMapping.class)
-	public CommandLineRunner printMappings(RequestMappingHandlerMapping mapping) {
+	@ConditionalOnBean(name = "requestMappingHandlerMapping")
+	public CommandLineRunner printMappings(ApplicationContext ctx) {
 		return args -> {
 			System.out.println("=== Registered Request Mappings ===");
-			mapping.getHandlerMethods().forEach((info, method) ->
-				System.out.println(info + " -> " + method)
-			);
+			if (ctx.containsBean("requestMappingHandlerMapping")) {
+				Object mapping = ctx.getBean("requestMappingHandlerMapping");
+				System.out.println("Found bean 'requestMappingHandlerMapping' of type: " + mapping.getClass().getName());
+			} else {
+				System.out.println("No requestMappingHandlerMapping bean found.");
+			}
 			System.out.println("=== End mappings ===");
 		};
 	}
