@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>OpenTimestamps - UI de prueba</title>
+  <style>
+    body { font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; background:#f6f8fa; color:#222; padding:24px; }
+    h1 { margin:0 0 8px; font-size:20px; }
+    .card { background:white; border-radius:8px; padding:12px 14px; box-shadow:0 2px 6px rgba(0,0,0,0.06); margin-bottom:12px; }
+    label { display:block; margin:8px 0 4px; font-weight:600; font-size:13px; }
+    .dropzone {
+      border: 2px dashed #d0d7de;
+      border-radius:8px;
+      padding:12px;
+      cursor:pointer;
+      background: linear-gradient(180deg, #fff, #fbfdff);
+      text-align:center;
+      color:#444;
+    }
+    .dropzone.dragover { border-color:#0b74de; background: #eef6ff; }
+    input[type="file"] { display:none; } /* hidden, we use dropzones */
+    button { padding:8px 12px; border-radius:6px; border:0; background:#0b74de; color:white; cursor:pointer; }
+    button.secondary { background:#6c757d; }
+    pre { background:#0b0b0b; color:#d6ffd6; padding:8px; border-radius:6px; max-height:220px; overflow:auto; font-size:12px; white-space:pre-wrap; word-break:break-word; }
+    .row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+    .hint { font-size:12px; color:#666; margin-top:6px; }
+    .status-ok { color: green; font-weight:700; }
+    .status-fail { color: red; font-weight:700; }
+    .meta { font-size:13px; color:#333; margin-top:8px; }
+    .small { font-size:12px; color:#666; }
+  </style>
+</head>
+<body>
+  <h1>OpenTimestamps — UI de prueba</h1>
+  <p class="hint">Asegurate que la API corre en <strong>http://localhost:8080</strong>. Si usás otro host/puerto actualizá la variable <code>API_BASE</code> en el script.</p>
+
+  <!-- STAMP -->
+  <div class="card">
+    <strong>1) Stamp (subir PDF → generar .ots)</strong>
+    <label>Archivo PDF (arrastrar o click)</label>
+    <div id="stamp-drop" class="dropzone">Arrastrá o hacé click para seleccionar un PDF</div>
+    <input id="stamp-file" type="file" accept="application/pdf" />
+    <div class="row" style="margin-top:8px;">
+      <button id="btn-stamp">Stamp</button>
+      <button class="secondary" id="btn-stamp-clear">Limpiar</button>
+      <div id="stamp-msg" style="margin-left:12px;"></div>
+    </div>
+    <div class="hint">Descarga automática del .ots si todo sale OK.</div>
+  </div>
+
+  <!-- UPGRADE -->
+  <div class="card">
+    <strong>2) Upgrade (subir .ots → intentar upgrade)</strong>
+    <label>Archivo .ots (arrastrar o click)</label>
+    <div id="upgrade-drop" class="dropzone">Arrastrá o hacé click para seleccionar un .ots</div>
+    <input id="upgrade-file" type="file" accept=".ots,application/octet-stream" />
+    <div class="row" style="margin-top:8px;">
+      <button id="btn-upgrade">Upgrade</button>
+      <button class="secondary" id="btn-upgrade-clear">Limpiar</button>
+      <div id="upgrade-msg" style="margin-left:12px;"></div>
+    </div>
+    <div class="hint">Si el upgrade devuelve un .ots actualizado se descargará automáticamente.</div>
+  </div>
+
+  <!-- INFO -->
+  <div class="card">
+    <strong>3) Info (subir .ots → ver info legible)</strong>
+    <label>Archivo .ots (arrastrar o click)</label>
+    <div id="info-drop" class="dropzone">Arrastrá o hacé click para seleccionar un .ots</div>
+    <input id="info-file" type="file" accept=".ots,application/octet-stream" />
+    <div class="row" style="margin-top:8px;">
+      <button id="btn-info">Info</button>
+      <button class="secondary" id="btn-info-clear">Limpiar</button>
+    </div>
+    <div style="margin-top:8px;">
+      <pre id="info-output">Aquí aparecerá la salida de info()</pre>
+    </div>
+  </div>
+
+  <!-- VERIFY -->
+  <div class="card">
+    <strong>4) Verify (subir .ots + PDF → verificar)</strong>
+    <label>.ots (arrastrar o click)</label>
+    <div id="verify-ots-drop" class="dropzone">Arrastrá o hacé click para seleccionar .ots</div>
+    <input id="verify-ots" type="file" accept=".ots,application/octet-stream" />
+    <label>PDF (arrastrar o click)</label>
+    <div id="verify-pdf-drop" class="dropzone">Arrastrá o hacé click para seleccionar PDF original</div>
+    <input id="verify-pdf" type="file" accept="application/pdf" />
+
+    <div class="row" style="margin-top:8px;">
+      <button id="btn-verify">Verify</button>
+      <button class="secondary" id="btn-verify-json">Mostrar como JSON</button>
+      <button class="secondary" id="btn-verify-clear">Limpiar</button>
+      <div id="verify-msg" style="margin-left:12px;"></div>
+    </div>
+
+    <div style="margin-top:8px;">
+      <pre id="verify-output">Aquí aparecerá la salida de verify()</pre>
+      <div id="verify-meta" class="meta"></div>
+    </div>
+  </div>
+
+
+  <script>
+    // CONFIG: si tu backend corre en otro host/puerto cambialo aquí.
+    const API_BASE = '';
+
+    // Helpers DOM
+    const el = id => document.getElementById(id);
+    const setMsg = (id, txt, ok=true) => el(id).innerHTML = '<span class="'+(ok?'status-ok':'status-fail')+'">'+txt+'</span>';
+    const clearMsg = id => el(id).textContent = '';
+
+    // Generic POST helper that inspects content-type:
+    async function postMultipartFetch(url, formData) {
+      const res = await fetch(url, { method: 'POST', body: formData });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || ('HTTP ' + res.status));
+      }
+
+      const ct = res.headers.get('content-type') || '';
+      if (ct.includes('application/json')) {
+        const json = await res.json();
+        return { json, headers: res.headers };
+      } else {
+        // binary -> blob
+        const blob = await res.blob();
+        return { blob, headers: res.headers };
+      }
+    }
+
+    function downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename || 'download.bin';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 1500);
+    }
+
+    // Drag-and-drop wiring utility
+    function wireDrop(dropId, inputId, hintText) {
+      const drop = el(dropId);
+      const input = el(inputId);
+      drop.addEventListener('click', () => input.click());
+      ['dragenter','dragover'].forEach(ev => {
+        drop.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); drop.classList.add('dragover'); });
+      });
+      ['dragleave','drop','dragend'].forEach(ev => {
+        drop.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); drop.classList.remove('dragover'); });
+      });
+      drop.addEventListener('drop', e => {
+        const dt = e.dataTransfer;
+        if (dt && dt.files && dt.files.length) {
+          input.files = dt.files;
+          drop.textContent = dt.files[0].name;
+        }
+      });
+      input.addEventListener('change', () => {
+        if (input.files && input.files.length) drop.textContent = input.files[0].name;
+        else drop.textContent = hintText;
+      });
+      // initial
+      drop.textContent = hintText;
+    }
+
+    // Wire all dropzones
+    wireDrop('stamp-drop', 'stamp-file', 'Arrastrá o hacé click para seleccionar un PDF');
+    wireDrop('upgrade-drop','upgrade-file','Arrastrá o hacé click para seleccionar un .ots');
+    wireDrop('info-drop','info-file','Arrastrá o hacé click para seleccionar un .ots');
+    wireDrop('verify-ots-drop','verify-ots','Arrastrá o hacé click para seleccionar un .ots');
+    wireDrop('verify-pdf-drop','verify-pdf','Arrastrá o hacé click para seleccionar un PDF original');
+
+    // STAMP
+    el('btn-stamp').addEventListener('click', async () => {
+      clearMsg('stamp-msg');
+      const input = el('stamp-file');
+      if (!input.files.length) return setMsg('stamp-msg','Seleccioná un PDF primero', false);
+      const f = input.files[0];
+      const fd = new FormData(); fd.append('file', f);
+      setMsg('stamp-msg','Enviando...');
+      try {
+        const res = await postMultipartFetch(API_BASE + '/api/ots/stamp', fd);
+        if (res.json) {
+          // backend devolvió JSON con metadata (por ejemplo { status: "OK", fileBase64: "...", block_time: "..."} )
+          if (res.json.fileBase64) {
+            const b = atob(res.json.fileBase64);
+            const arr = new Uint8Array([...b].map(c => c.charCodeAt(0)));
+            downloadBlob(new Blob([arr]), res.json.filename || 'result.ots');
+          }
+          if (res.json.block_time) setMsg('stamp-msg','OK (block_time: ' + res.json.block_time + ')');
+          else setMsg('stamp-msg','OK (JSON recibido)');
+        } else {
+          // binary -> download
+          const cd = res.headers.get('content-disposition') || '';
+          let filename = 'result.ots';
+          const m = /filename="?([^"]+)"?/.exec(cd);
+          if (m) filename = m[1];
+          downloadBlob(res.blob, filename);
+          setMsg('stamp-msg','OK — .ots descargado');
+        }
+      } catch (err) { console.error(err); setMsg('stamp-msg','FAIL: ' + err.message, false); }
+    });
+    el('btn-stamp-clear').addEventListener('click', ()=>{ el('stamp-file').value=''; el('stamp-drop').textContent = 'Arrastrá o hacé click para seleccionar un PDF'; clearMsg('stamp-msg'); });
+
+    // UPGRADE
+    el('btn-upgrade').addEventListener('click', async () => {
+      clearMsg('upgrade-msg');
+      const input = el('upgrade-file');
+      if (!input.files.length) return setMsg('upgrade-msg','Seleccioná un .ots primero', false);
+      const f = input.files[0];
+      const fd = new FormData(); fd.append('ots', f);
+      setMsg('upgrade-msg','Enviando...');
+      try {
+        const res = await postMultipartFetch(API_BASE + '/api/ots/upgrade', fd);
+
+        if (res.json) {
+          // JSON response from server
+          // Expecting structure like { status: "NO_UPGRADE", message: "El archivo .ots todavía no recibió ningún upgrade" } or error
+          const json = res.json;
+          if (json.status === 'NO_UPGRADE') {
+            // show friendly spanish message (green)
+            setMsg('upgrade-msg', json.message || 'El archivo .ots todavía no recibió ningún upgrade', false);
+          } else if (json.status === 'FAIL') {
+            setMsg('upgrade-msg', 'Error: ' + (json.error || 'Error en el server'), false);
+          } else {
+            // Generic JSON handling fallback (in case server returns metadata)
+            if (json.fileBase64) {
+              const b = atob(json.fileBase64);
+              const arr = new Uint8Array([...b].map(c => c.charCodeAt(0)));
+              downloadBlob(new Blob([arr]), json.filename || 'upgraded.ots');
+              setMsg('upgrade-msg','OK — .ots descargado');
+            } else if (json.block_time) {
+              setMsg('upgrade-msg','OK (block_time: ' + json.block_time + ')');
+            } else {
+              setMsg('upgrade-msg','OK (JSON recibido)');
+            }
+          }
+        } else {
+          // binary -> downloaded upgraded .ots
+          const cd = res.headers.get('content-disposition') || '';
+          let filename = 'upgraded.ots';
+          const m = /filename="?([^"]+)"?/.exec(cd);
+          if (m) filename = m[1];
+          downloadBlob(res.blob, filename);
+          setMsg('upgrade-msg','OK — .ots descargado');
+        }
+      } catch (err) { console.error(err); setMsg('upgrade-msg','FAIL: ' + err.message, false); }
+    });
+    el('btn-upgrade-clear').addEventListener('click', ()=>{ el('upgrade-file').value=''; el('upgrade-drop').textContent='Arrastrá o hacé click para seleccionar un .ots'; clearMsg('upgrade-msg'); });
+
+    // INFO
+    el('btn-info').addEventListener('click', async () => {
+      el('info-output').textContent = 'Enviando...';
+      const input = el('info-file');
+      if (!input.files.length) return el('info-output').textContent = 'Seleccioná un .ots primero';
+      const f = input.files[0];
+      const fd = new FormData(); fd.append('ots', f);
+      try {
+        const res = await postMultipartFetch(API_BASE + '/api/ots/info', fd);
+        if (res.json) {
+          // pretty print JSON
+          el('info-output').textContent = JSON.stringify(res.json, null, 2);
+        } else {
+          el('info-output').textContent = res.blob ? await res.blob.text() : '';
+        }
+      } catch (err) {
+        console.error(err);
+        el('info-output').textContent = 'FAIL: ' + err.message;
+      }
+    });
+    el('btn-info-clear').addEventListener('click', ()=>{ el('info-file').value=''; el('info-drop').textContent='Arrastrá o hacé click para seleccionar un .ots'; el('info-output').textContent=''; });
+
+    // VERIFY
+    el('btn-verify').addEventListener('click', async () => {
+      el('verify-output').textContent = ''; clearMsg('verify-msg'); el('verify-meta').textContent = '';
+      const otsIn = el('verify-ots'); const pdfIn = el('verify-pdf');
+      if (!otsIn.files.length || !pdfIn.files.length) return setMsg('verify-msg','Seleccioná .ots y PDF', false);
+      const fd = new FormData();
+      fd.append('ots', otsIn.files[0]);
+      fd.append('file', pdfIn.files[0]);
+      setMsg('verify-msg','Enviando...');
+      try {
+        const res = await postMultipartFetch(API_BASE + '/api/ots/verify', fd);
+        if (res.json) {
+          // Expect JSON like { status: "OK", info: "...", block_time: "..." }
+          if (res.json.status) {
+            setMsg('verify-msg', res.json.status === 'OK' ? 'OK' : 'FAIL', res.json.status === 'OK');
+          } else {
+            setMsg('verify-msg','OK');
+          }
+          el('verify-output').textContent = res.json.info || JSON.stringify(res.json, null, 2);
+          if (res.json.block_time) {
+            el('verify-meta').textContent = 'Hora de minado: ' + res.json.block_time + ' (UTC)';
+          } else {
+            // try to find txid or block in info (if provided)
+            if (res.json.txid) el('verify-meta').textContent = 'txid: ' + res.json.txid;
+            else if (res.json.block_hash) el('verify-meta').textContent = 'block_hash: ' + res.json.block_hash;
+          }
+        } else {
+          // text response (legacy)
+          const text = res.blob ? await res.blob.text() : '';
+          if (text.startsWith('OK')) {
+            setMsg('verify-msg','OK');
+            el('verify-output').textContent = text;
+          } else {
+            setMsg('verify-msg','FAIL', false);
+            el('verify-output').textContent = text;
+          }
+        }
+      } catch (err) { console.error(err); setMsg('verify-msg','FAIL: ' + err.message, false); el('verify-output').textContent = err.message; }
+    });
+    // VERIFY JSON
+    el('btn-verify-json').addEventListener('click', async () => {
+      el('verify-output').textContent = ''; clearMsg('verify-msg'); el('verify-meta').textContent = '';
+      const otsIn = el('verify-ots'); const pdfIn = el('verify-pdf');
+      if (!otsIn.files.length || !pdfIn.files.length) return setMsg('verify-msg','Seleccioná .ots y PDF', false);
+
+      const fd = new FormData();
+      fd.append('ots', otsIn.files[0]);
+      fd.append('file', pdfIn.files[0]);
+      setMsg('verify-msg','Enviando...');
+
+      try {
+        const res = await fetch(API_BASE + '/api/ots/verify', { method: 'POST', body: fd });
+        const json = await res.json();
+
+        // Tomamos solo los campos relevantes
+        const simplified = {
+          status: json.status,
+          txid: json.txid,
+          block_hash: json.block_hash,
+          block_height: json.block_height ?? json.rawVerifyResults?.BITCOIN?.height,
+          block_time: json.block_time ?? json.rawVerifyResults?.BITCOIN?.timestamp
+        };
+
+        el('verify-output').textContent = JSON.stringify(simplified, null, 2);
+        setMsg('verify-msg', simplified.status || 'OK', simplified.status === 'OK');
+      } catch (err) {
+        console.error(err);
+        setMsg('verify-msg','FAIL: ' + err.message, false);
+        el('verify-output').textContent = err.message;
+      }
+    });
+
+
+    el('btn-verify-clear').addEventListener('click', ()=>{ el('verify-ots').value=''; el('verify-pdf').value=''; el('verify-ots-drop').textContent='Arrastrá o hacé click para seleccionar .ots'; el('verify-pdf-drop').textContent='Arrastrá o hacé click para seleccionar un PDF original'; el('verify-output').textContent=''; el('verify-meta').textContent=''; clearMsg('verify-msg'); });
+
+  </script>
+</body>
+</html>

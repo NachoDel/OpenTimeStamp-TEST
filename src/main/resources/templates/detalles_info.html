@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${Titulo}">Pagina "detalles_info"</title>
+</head>
+<body>
+
+   <h1>Información de archivo</h1>
+    <ul>
+        <li><strong>Nombre archivo original:</strong> <span th:text="${StampedFile.fileName}"></span></li>
+        <li><strong>ID de archivo:</strong> <span th:text="${StampedFile.stampId}"></span></li>
+        <li>
+            <strong>Fecha de creación:</strong> 
+            <span th:text="${StampedFile.stampDate != null ? StampedFile.stampDate : 'NULL_DATE' }"></span>
+        </li>
+        <li><strong>¿Está confirmado en la blockchain?</strong> <span th:text="${StampedFile.confirmed}"></span></li>
+    </ul>
+
+</body>
+</html>
